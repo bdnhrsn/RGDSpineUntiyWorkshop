@@ -7,37 +7,57 @@ using Spine.Unity;
 public class CustomSpineObject : MonoBehaviour {
 
 	private SkeletonAnimation skeletonAnim;
-	private string idleAnim = "idle";
-	private string walkAnim = "walk";
-	bool inputLeft, inputRight, inputJump;
+	private const string idleAnim = "idle";
+	private const string walkAnim = "walk";
+	private const string jumpAnim = "jump";
+	bool inputLeft, inputRight, inputJump, onGround;
 
 	void Awake() {
 		skeletonAnim = GetComponent<SkeletonAnimation> ();
+		onGround = true;
 	}
 
 	void Start() {
-
-		skeletonAnim.AnimationState.SetAnimation(0, idleAnim, true);
+		skeletonAnim.AnimationState.Complete += OnAnimationComplete;
+		// skeletonAnim.AnimationState.SetAnimation(0, idleAnim, true);
 	}
 
 	void Update() {
 		UpdateCurrentInputValues();
-
+		if (inputJump) {
+			onGround = false;
+			skeletonAnim.AnimationState.SetAnimation(0, jumpAnim, false);
+		} 
 		if (inputLeft || inputRight) {
-			if (inputLeft && inputRight) {
-				skeletonAnim.AnimationState.SetAnimation(0, idleAnim, true);
+			if (inputLeft && inputRight && onGround) {
+				Idle();
 			} else {
 				if (inputLeft) {
 					FlipCharacter(InputDirection.Left);
 				} else if (inputRight) {
 					FlipCharacter(InputDirection.Right);
 				}
-				if (skeletonAnim.AnimationName != walkAnim) {
+				if (onGround && skeletonAnim.AnimationName != walkAnim) {
 					skeletonAnim.AnimationState.SetAnimation(0, walkAnim, true);
 				}
 			}
-		} else {
+		} else if (onGround) {
+			Idle();
+		}
+	}
+
+	void Idle() {
+		if (skeletonAnim.AnimationName != idleAnim) {
 			skeletonAnim.AnimationState.SetAnimation(0, idleAnim, true);
+		}
+	}
+
+	void OnAnimationComplete(TrackEntry pTrackEntry) {
+		switch (pTrackEntry.animation.name) {
+			case jumpAnim:
+				Idle();
+				onGround = true;
+				break;
 		}
 	}
 
