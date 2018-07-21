@@ -10,7 +10,11 @@ public class CustomSpineObject : MonoBehaviour {
 	private const string idleAnim = "idle";
 	private const string walkAnim = "walk";
 	private const string jumpAnim = "jump";
-	bool inputLeft, inputRight, inputJump, onGround;
+	private const string fireAnim = "shoot";
+	bool inputLeft, inputRight, inputJump, inputFire, onGround;
+
+	const int movementTrack = 0;
+	const int actionTrack = 1;
 
 	void Awake() {
 		skeletonAnim = GetComponent<SkeletonAnimation> ();
@@ -19,14 +23,14 @@ public class CustomSpineObject : MonoBehaviour {
 
 	void Start() {
 		skeletonAnim.AnimationState.Complete += OnAnimationComplete;
-		// skeletonAnim.AnimationState.SetAnimation(0, idleAnim, true);
+		skeletonAnim.AnimationState.SetAnimation(movementTrack, idleAnim, true);
 	}
 
 	void Update() {
 		UpdateCurrentInputValues();
 		if (inputJump) {
 			onGround = false;
-			skeletonAnim.AnimationState.SetAnimation(0, jumpAnim, false);
+			skeletonAnim.AnimationState.SetAnimation(movementTrack, jumpAnim, false);
 		} 
 		if (inputLeft || inputRight) {
 			if (inputLeft && inputRight && onGround) {
@@ -38,17 +42,20 @@ public class CustomSpineObject : MonoBehaviour {
 					FlipCharacter(InputDirection.Right);
 				}
 				if (onGround && skeletonAnim.AnimationName != walkAnim) {
-					skeletonAnim.AnimationState.SetAnimation(0, walkAnim, true);
+					skeletonAnim.AnimationState.SetAnimation(movementTrack, walkAnim, true);
 				}
 			}
 		} else if (onGround) {
 			Idle();
 		}
+		if (inputFire && skeletonAnim.AnimationName != fireAnim) {
+			skeletonAnim.AnimationState.SetAnimation(actionTrack, fireAnim, false);
+		}
 	}
 
 	void Idle() {
 		if (skeletonAnim.AnimationName != idleAnim) {
-			skeletonAnim.AnimationState.SetAnimation(0, idleAnim, true);
+			skeletonAnim.AnimationState.SetAnimation(movementTrack, idleAnim, true);
 		}
 	}
 
@@ -83,11 +90,13 @@ public class CustomSpineObject : MonoBehaviour {
 		inputLeft = Input.GetKey("left");
 		inputRight = Input.GetKey("right");
 		inputJump = Input.GetKeyDown("space");
+		inputFire = Input.GetKeyDown("left shift");
 	}
 
 	enum InputDirection {
 		Left,
 		Right,
 		Jump,
+		Fire,
 	}
 }
