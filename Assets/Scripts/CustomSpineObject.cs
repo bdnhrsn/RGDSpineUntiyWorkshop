@@ -11,7 +11,9 @@ public class CustomSpineObject : MonoBehaviour {
 	private const string walkAnim = "walk";
 	private const string jumpAnim = "jump";
 	private const string fireAnim = "shoot";
-	bool inputLeft, inputRight, inputJump, inputFire, onGround;
+	private const string goggleSlotName = "goggles";
+	private const string gogglesAttachmentName = "goggles";
+	bool inputLeft, inputRight, inputJump, inputFire, inputGoggles, onGround;
 
 	const int movementTrack = 0;
 	const int actionTrack = 1;
@@ -19,11 +21,19 @@ public class CustomSpineObject : MonoBehaviour {
 	void Awake() {
 		skeletonAnim = GetComponent<SkeletonAnimation> ();
 		onGround = true;
+
+		skeletonAnim.AnimationState.Complete += OnAnimationComplete;
 	}
 
 	void Start() {
-		skeletonAnim.AnimationState.Complete += OnAnimationComplete;
 		skeletonAnim.AnimationState.SetAnimation(movementTrack, idleAnim, true);
+
+		skeletonAnim.AnimationState.Data.SetMix(idleAnim, walkAnim, 0.15f);
+		skeletonAnim.AnimationState.Data.SetMix(walkAnim, idleAnim, 0.15f);
+	}
+
+	void OnDestroy() {
+		skeletonAnim.AnimationState.Complete -= OnAnimationComplete;
 	}
 
 	void Update() {
@@ -51,11 +61,22 @@ public class CustomSpineObject : MonoBehaviour {
 		if (inputFire && skeletonAnim.AnimationName != fireAnim) {
 			skeletonAnim.AnimationState.SetAnimation(actionTrack, fireAnim, false);
 		}
+		if (inputGoggles) {
+			ToggleGoggles();
+		}
 	}
 
 	void Idle() {
 		if (skeletonAnim.AnimationName != idleAnim) {
 			skeletonAnim.AnimationState.SetAnimation(movementTrack, idleAnim, true);
+		}
+	}
+
+	void ToggleGoggles() {
+		if (skeletonAnim.skeleton.FindSlot(goggleSlotName).attachment == null) {
+			skeletonAnim.skeleton.SetAttachment(goggleSlotName, gogglesAttachmentName);
+		} else {
+			skeletonAnim.skeleton.SetAttachment(goggleSlotName, null);
 		}
 	}
 
@@ -91,6 +112,7 @@ public class CustomSpineObject : MonoBehaviour {
 		inputRight = Input.GetKey("right");
 		inputJump = Input.GetKeyDown("space");
 		inputFire = Input.GetKeyDown("left shift");
+		inputGoggles = Input.GetKeyDown("left alt");
 	}
 
 	enum InputDirection {
@@ -98,5 +120,6 @@ public class CustomSpineObject : MonoBehaviour {
 		Right,
 		Jump,
 		Fire,
+		Goggles,
 	}
 }
